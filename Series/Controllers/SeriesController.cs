@@ -6,6 +6,7 @@ using Series.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Series.Controllers
@@ -24,13 +25,13 @@ namespace Series.Controllers
         {
             var todasseries = _dbcontext.Series.Where(s => s.Ativo);
 
-            var viewseries = todasseries
+            var viewtodasseries = todasseries
                 .Select(s => new ViewSerie(s.Ano, s.Titulo, s.Descricao, s.Genero, s.Id));
 
-            return Ok(viewseries);
+            return Ok(viewtodasseries);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("get-by-id")]
         public IActionResult Get(int id)
         {
             var serie = _dbcontext.Series.SingleOrDefault(s => s.Id == id);
@@ -40,17 +41,29 @@ namespace Series.Controllers
                 return NotFound();
             } else
             {
-                var viewserie = new ViewSerie(serie.Ano, serie.Titulo, serie.Descricao, serie.Genero, serie.Id);
+                var viewserie = new ViewSerie
+                    (serie.Ano, serie.Titulo, serie.Descricao, serie.Genero, serie.Id);
                 return Ok(viewserie);
             }
 
+        }
+
+        [HttpGet("get-by-genero")]
+        public IActionResult GetAll(Genero genero)
+        {
+            var seriesdestegenero = _dbcontext.Series.Where(sdg => sdg.Genero == genero && sdg.Ativo);
+            var viewseriesporgenero = seriesdestegenero
+                .Select(sdg => new ViewSerie(sdg.Ano, sdg.Titulo, sdg.Descricao, sdg.Genero, sdg.Id));
+
+            return Ok(viewseriesporgenero);
         }
 
         // POST
         [HttpPost]
         public IActionResult Post([FromBody] CreateSerie inputModel)
         {
-            Serie serie = new Serie(inputModel.Ano, inputModel.Titulo, inputModel.Descricao, inputModel.Genero);
+            Serie serie = new Serie
+                (inputModel.Ano, inputModel.Titulo, inputModel.Descricao, inputModel.Genero);
 
             _dbcontext.Series.Add(serie);
             _dbcontext.SaveChanges();
